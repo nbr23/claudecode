@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "Claude code in docker",
   "dependencies": {
-    "@anthropic-ai/claude-code": "1.0.86"
+    "@anthropic-ai/claude-code": "1.0.88"
   }
 }
