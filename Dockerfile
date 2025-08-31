@@ -20,7 +20,17 @@ RUN apk update && apk add --no-cache \
     py3-virtualenv \
     sqlite \
     github-cli \
-    make
+    make \
+    go \
+    wget \
+    curl
+
+RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    unzip "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    mv terraform /usr/local/bin/ && \
+    rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip"
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
