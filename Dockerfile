@@ -21,7 +21,6 @@ RUN apk update && apk add --no-cache \
     py3-pip \
     py3-virtualenv \
     sqlite \
-    github-cli \
     make \
     go \
     wget \
@@ -29,7 +28,11 @@ RUN apk update && apk add --no-cache \
     gcc \
     g++ \
     musl-dev \
-    build-base
+    build-base \
+    aws-cli
+
+RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
+    apk add --no-cache github-cli@edge
 
 RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
     ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
