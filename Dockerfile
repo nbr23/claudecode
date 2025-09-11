@@ -43,6 +43,8 @@ RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+RUN chown -R node:node /usr/local
+
 USER node
 
 
