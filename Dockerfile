@@ -2,7 +2,9 @@ FROM node:24-alpine
 
 USER root
 RUN apk update && apk add --no-cache \
-    git ripgrep bash \
+    git \
+    ripgrep \
+    bash \
     less \
     procps \
     fzf \
@@ -23,7 +25,11 @@ RUN apk update && apk add --no-cache \
     make \
     go \
     wget \
-    curl
+    curl \
+    gcc \
+    g++ \
+    musl-dev \
+    build-base
 
 RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
     ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
