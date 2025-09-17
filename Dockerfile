@@ -29,7 +29,9 @@ RUN apk update && apk add --no-cache \
     g++ \
     musl-dev \
     build-base \
-    aws-cli
+    aws-cli \
+    docker \
+    docker-cli-compose
 
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache github-cli@edge
