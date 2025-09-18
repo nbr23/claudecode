@@ -5,7 +5,7 @@
   "onboarding": false,
   "packageRules": [
     {
-      "matchPackageNames": ["@anthropic-ai/claude-code"],
+      "matchPackageNames": ["@anthropic-ai/claude-code", "@openai/codex"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
