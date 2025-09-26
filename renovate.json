@@ -5,7 +5,7 @@
   "onboarding": false,
   "packageRules": [
     {
-      "matchPackageNames": ["@anthropic-ai/claude-code", "@openai/codex"],
+      "matchPackageNames": ["@anthropic-ai/claude-code", "@openai/codex", "@github/copilot"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
