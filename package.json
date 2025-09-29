@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Claude code in docker",
   "dependencies": {
-    "@anthropic-ai/claude-code": "1.0.128",
-    "@openai/codex": "^0.42.0",
-    "@github/copilot": "^0.0.328"
+    "@anthropic-ai/claude-code": "^2.0.0",
+    "@github/copilot": "^0.0.328",
+    "@openai/codex": "^0.42.0"
   }
 }
