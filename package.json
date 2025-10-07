@@ -4,7 +4,7 @@
   "description": "Claude code in docker",
   "dependencies": {
     "@anthropic-ai/claude-code": "^2.0.0",
-    "@github/copilot": "^0.0.334",
+    "@github/copilot": "^0.0.335",
     "@openai/codex": "^0.44.0"
   }
 }
