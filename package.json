@@ -5,6 +5,6 @@
   "dependencies": {
     "@anthropic-ai/claude-code": "^2.0.0",
     "@github/copilot": "^0.0.335",
-    "@openai/codex": "^0.44.0"
+    "@openai/codex": "^0.45.0"
   }
 }
