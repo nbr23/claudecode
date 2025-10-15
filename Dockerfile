@@ -1,6 +1,7 @@
 FROM node:24-alpine AS base
 
 USER root
+
 RUN apk update && apk add --no-cache \
     git \
     ripgrep \
@@ -12,32 +13,36 @@ RUN apk update && apk add --no-cache \
     mandoc \
     unzip \
     gnupg \
-    iptables \
-    ipset \
-    iproute2 \
-    bind-tools \
-    jq \
-    python3 \
-    py3-pip \
-    py3-virtualenv \
-    sqlite \
-    make \
-    go \
     wget \
     curl \
+    jq \
+    make \
     gcc \
     g++ \
     musl-dev \
     linux-headers \
     build-base \
+    iptables \
+    ipset \
+    iproute2 \
+    bind-tools
+
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    py3-virtualenv \
+    go \
+    rust \
+    cargo \
+    sqlite \
+    postgresql-client \
+    mysql-client \
+    redis
+
+RUN apk add --no-cache \
     aws-cli \
     docker \
     docker-cli-compose \
-    postgresql-client \
-    mysql-client \
-    redis \
-    rust \
-    cargo \
     yq \
     pngquant \
     imagemagick \
