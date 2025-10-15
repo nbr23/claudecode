@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:24-alpine AS base
 
 USER root
 RUN apk update && apk add --no-cache \
@@ -46,6 +46,11 @@ RUN apk update && apk add --no-cache \
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache github-cli@edge
 
+FROM base AS tools-builder
+
+USER root
+WORKDIR /tmp
+
 RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
     ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
@@ -71,8 +76,18 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
     tar -xf "google-cloud-cli-linux-${ARCH}.tar.gz" && \
     ./google-cloud-sdk/install.sh --quiet --path-update false && \
     mv google-cloud-sdk /opt/ && \
-    rm -f "google-cloud-cli-linux-${ARCH}.tar.gz" && \
-    ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
+    rm -f "google-cloud-cli-linux-${ARCH}.tar.gz"
+
+FROM base
+
+USER root
+
+COPY --from=tools-builder /usr/local/bin/terraform /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
+COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
+
+RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
     ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
     ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq
 
@@ -80,8 +95,12 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN chown -R node:node /usr/local
 
-USER node
+ENV CLAUDE_CODE_ENABLE_TELEMETRY=0
+ENV DISABLE_ERROR_REPORTING=1
+ENV DISABLE_TELEMETRY=1
+ENV DISABLE_AUTOUPDATER=1
 
+USER node
 
 WORKDIR /home/node/.tools
 COPY package.json ./
@@ -89,10 +108,5 @@ RUN npm install
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 
 WORKDIR /home/node
-
-ENV CLAUDE_CODE_ENABLE_TELEMETRY=0
-ENV DISABLE_ERROR_REPORTING=1
-ENV DISABLE_TELEMETRY=1
-ENV DISABLE_AUTOUPDATER=1
 
 ENTRYPOINT ["claude"]
