@@ -3,9 +3,20 @@
   "extends": ["config:base", "schedule:daily"],
   "dependencyDashboard": false,
   "onboarding": false,
+  "regexManagers": [
+    {
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ENV CLAUDE_VERSION=(?<currentValue>.*?)\\n"],
+      "depNameTemplate": "@anthropic-ai/claude-code",
+      "datasourceTemplate": "npm",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "rebase"
+    }
+  ],
   "packageRules": [
     {
-      "matchPackageNames": ["@anthropic-ai/claude-code", "@openai/codex", "@github/copilot"],
+      "matchPackageNames": [ "@openai/codex", "@github/copilot"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"

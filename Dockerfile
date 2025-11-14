@@ -112,6 +112,11 @@ COPY package.json ./
 RUN npm install
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 
+ENV CLAUDE_VERSION=2.0.36
+RUN curl -fsSL https://claude.ai/install.sh | bash -s ${CLAUDE_VERSION}
+
+ENV PATH="/home/node/.local/bin:${PATH}"
+
 WORKDIR /home/node
 
 ENTRYPOINT ["claude"]
