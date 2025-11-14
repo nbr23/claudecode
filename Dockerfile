@@ -109,11 +109,10 @@ USER node
 
 WORKDIR /home/node/.tools
 COPY package.json ./
-RUN npm install
+RUN npm install --omit=dev
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 
-ENV CLAUDE_VERSION=2.0.36
-RUN curl -fsSL https://claude.ai/install.sh | bash -s ${CLAUDE_VERSION}
+RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' package.json)
 
 ENV PATH="/home/node/.local/bin:${PATH}"
 
