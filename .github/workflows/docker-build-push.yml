@@ -4,6 +4,10 @@ on:
   push:
     branches: [ master ]
 
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
