@@ -51,6 +51,25 @@ RUN apk add --no-cache \
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache github-cli@edge
 
+RUN apk add --no-cache \
+    clang \
+    cmake \
+    ninja \
+    gcompat
+
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+
+RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter && \
+    chown -R node:node /opt/flutter
+
+USER node
+RUN cd /opt/flutter && \
+    flutter precache --linux && \
+    flutter config --no-analytics
+
+USER root
+
 FROM base AS tools-builder
 
 USER root
