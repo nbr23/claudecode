@@ -25,7 +25,8 @@ RUN apk update && apk add --no-cache \
     iptables \
     ipset \
     iproute2 \
-    bind-tools
+    bind-tools \
+    tzdata
 
 RUN apk add --no-cache \
     python3 \
@@ -118,6 +119,9 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN chown -R node:node /usr/local
+
+ARG TZ=America/New_York
+ENV TZ=${TZ}
 
 ENV CLAUDE_CODE_ENABLE_TELEMETRY=0
 ENV DISABLE_ERROR_REPORTING=1
