@@ -130,6 +130,8 @@ ENV DISABLE_AUTOUPDATER=1
 
 USER node
 
+RUN npm install -g pnpm
+
 WORKDIR /home/node/.tools
 COPY package.json ./
 RUN npm install --omit=dev
