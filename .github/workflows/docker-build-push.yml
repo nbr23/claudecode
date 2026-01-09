@@ -26,12 +26,26 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         
+    - name: Extract dependency versions
+      id: versions
+      run: |
+        CLAUDE_CODE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)
+        CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)
+        COPILOT_VERSION=$(jq -r '.dependencies["@github/copilot"]' package.json)
+        echo "claude-code=$CLAUDE_CODE_VERSION" >> $GITHUB_OUTPUT
+        echo "codex=$CODEX_VERSION" >> $GITHUB_OUTPUT
+        echo "copilot=$COPILOT_VERSION" >> $GITHUB_OUTPUT
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
         platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
-        tags: nbr23/claudecode:latest
+        tags: |
+          nbr23/claudecode:latest
+          nbr23/claudecode:claude-code-${{ steps.versions.outputs.claude-code }}
+          nbr23/claudecode:codex-${{ steps.versions.outputs.codex }}
+          nbr23/claudecode:copilot-${{ steps.versions.outputs.copilot }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
