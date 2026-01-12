@@ -7,6 +7,6 @@
     "@openai/codex": "0.80.0"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-code":"2.1.4"
+    "@anthropic-ai/claude-code":"2.1.5"
   }
 }
