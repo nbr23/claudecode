@@ -83,6 +83,11 @@ RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform
     mv terraform /usr/local/bin/ && \
     rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip"
 
+RUN TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${ARCH}" -o /usr/local/bin/terragrunt && \
+    chmod +x /usr/local/bin/terragrunt
+
 RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt) && \
     curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" && \
@@ -108,6 +113,7 @@ FROM base
 USER root
 
 COPY --from=tools-builder /usr/local/bin/terraform /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/terragrunt /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
 COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
