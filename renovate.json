@@ -5,7 +5,7 @@
   "onboarding": false,
   "packageRules": [
     {
-      "matchPackageNames": ["@openai/codex", "@github/copilot", "@anthropic-ai/claude-code"],
+      "matchPackageNames": ["@openai/codex", "@github/copilot", "@anthropic-ai/claude-code", "@google/gemini-cli"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
