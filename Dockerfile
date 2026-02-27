@@ -147,9 +147,11 @@ RUN npm install --omit=dev
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 
 RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' package.json)
-RUN curl -fsSL https://opencode.ai/install | bash -s -- --version $(jq -r '.devDependencies."opencode-ai"' package.json) --no-modify-path
+RUN curl -fsSL https://opencode.ai/install | bash -s -- --version $(jq -r '.devDependencies."opencode-ai"' package.json) --no-modify-path && \
+    mkdir -p /home/node/.local && \
+    mv /home/node/.opencode /home/node/.local/opencode
 
-ENV PATH="/home/node/.local/bin:/home/node/.opencode/bin:${PATH}"
+ENV PATH="/home/node/.local/bin:/home/node/.local/opencode/bin:${PATH}"
 
 WORKDIR /home/node
 
