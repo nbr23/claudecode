@@ -5,7 +5,7 @@
   "dependencies": {
     "@github/copilot": "0.0.420",
     "@openai/codex": "0.106.0",
-    "@google/gemini-cli": "0.30.0"
+    "@google/gemini-cli": "0.31.0"
   },
   "devDependencies": {
     "@anthropic-ai/claude-code":"2.1.62",
