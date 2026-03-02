@@ -146,6 +146,13 @@ COPY package.json ./
 RUN npm install --omit=dev
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 
+USER root
+RUN printf '#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\nssize_t posix_getdents(unsigned int fd, void *buf, size_t buflen, long *basep) { return syscall(SYS_getdents64, fd, buf, buflen); }\n' > /tmp/pgd.c \
+    && cc -shared -fPIC -nostartfiles -o /usr/lib/posix_getdents.so /tmp/pgd.c \
+    && rm /tmp/pgd.c
+ENV LD_PRELOAD=/usr/lib/posix_getdents.so
+USER node
+
 RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' package.json)
 RUN curl -fsSL https://opencode.ai/install | bash -s -- --version $(jq -r '.devDependencies."opencode-ai"' package.json) --no-modify-path && \
     mkdir -p /home/node/.local && \
