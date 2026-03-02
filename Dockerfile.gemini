@@ -1,0 +1,109 @@
+FROM node:22-slim AS base
+
+USER root
+
+RUN apt update && apt install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    golang rustc cargo \
+    sqlite3 postgresql-client default-mysql-client redis-tools \
+    awscli docker.io \
+    make g++ gcc cmake clang ninja-build build-essential \
+    fzf zsh wget gnupg \
+    iptables ipset iproute2 \
+    coreutils tzdata \
+    pngquant imagemagick ffmpeg \
+    xz-utils libglu1-mesa \
+    man-db curl dnsutils less jq bc gh git unzip rsync ripgrep procps psmisc lsof socat ca-certificates \
+  && apt clean \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /usr/local/share/npm-global \
+  && chown -R node:node /usr/local/share/npm-global
+ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
+ENV PATH=$PATH:/usr/local/share/npm-global/bin
+
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+
+RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter \
+    && chown -R node:node /opt/flutter
+
+USER node
+RUN flutter precache --linux && flutter config --no-analytics
+
+USER root
+
+FROM base AS tools-builder
+
+USER root
+WORKDIR /tmp
+
+RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    wget -q "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    unzip "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
+    mv terraform /usr/local/bin/ && \
+    rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip"
+
+RUN TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${ARCH}" -o /usr/local/bin/terragrunt && \
+    chmod +x /usr/local/bin/terragrunt
+
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt) && \
+    curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" && \
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/
+
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    HELM_VERSION=$(curl -s https://api.github.com/repos/helm/helm/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    wget -q "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" && \
+    tar -zxf "helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" && \
+    mv "linux-${ARCH}/helm" /usr/local/bin/ && \
+    rm -rf "linux-${ARCH}" "helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz"
+
+RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
+    curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-${ARCH}.tar.gz" && \
+    tar -xf "google-cloud-cli-linux-${ARCH}.tar.gz" && \
+    ./google-cloud-sdk/install.sh --quiet --path-update false && \
+    mv google-cloud-sdk /opt/ && \
+    rm -f "google-cloud-cli-linux-${ARCH}.tar.gz"
+
+RUN YQ_VERSION=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${ARCH}" -o /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
+
+FROM base
+
+USER root
+
+COPY --from=tools-builder /usr/local/bin/terraform /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/terragrunt /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/yq /usr/local/bin/
+COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
+
+RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
+    ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
+    ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ARG TZ=America/New_York
+ENV TZ=${TZ}
+ENV DISABLE_TELEMETRY=1
+ENV DISABLE_ERROR_REPORTING=1
+ENV DISABLE_AUTOUPDATER=1
+
+USER node
+
+RUN npm install -g pnpm
+
+ARG GEMINI_VERSION
+RUN npm install -g @google/gemini-cli@${GEMINI_VERSION} \
+  && npm cache clean --force
+
+CMD ["gemini"]

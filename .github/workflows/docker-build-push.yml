@@ -9,23 +9,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-push:
+  build-claudecode:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-      
+
     - name: Log in to Docker Hub
       if: github.event_name != 'pull_request'
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
+
     - name: Extract dependency versions
       id: versions
       run: |
@@ -47,5 +47,42 @@ jobs:
           nbr23/claudecode:claude-code-${{ steps.versions.outputs.claude-code }}
           nbr23/claudecode:codex-${{ steps.versions.outputs.codex }}
           nbr23/claudecode:copilot-${{ steps.versions.outputs.copilot }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=claudecode
+        cache-to: type=gha,mode=max,scope=claudecode
+
+  build-gemini-cli:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Extract gemini version
+      id: versions
+      run: |
+        GEMINI_VERSION=$(jq -r '.devDependencies["@google/gemini-cli"]' package.json)
+        echo "gemini=$GEMINI_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Build and push gemini-cli image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: Dockerfile.gemini
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
+        build-args: GEMINI_VERSION=${{ steps.versions.outputs.gemini }}
+        tags: |
+          nbr23/gemini-cli:latest
+          nbr23/gemini-cli:${{ steps.versions.outputs.gemini }}
+        cache-from: type=gha,scope=gemini-cli
+        cache-to: type=gha,mode=max,scope=gemini-cli
