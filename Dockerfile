@@ -27,6 +27,7 @@ RUN apk update && apk add --no-cache \
     iproute2 \
     bind-tools \
     coreutils \
+    grep \
     tzdata
 
 RUN apk add --no-cache \
