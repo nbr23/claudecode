@@ -2,7 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:base", "schedule:daily"],
   "dependencyDashboard": false,
-  "onboarding": false,
   "packageRules": [
     {
       "matchPackageNames": ["@openai/codex", "@github/copilot", "@anthropic-ai/claude-code", "@google/gemini-cli", "opencode-ai"],
