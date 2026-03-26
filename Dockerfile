@@ -149,9 +149,13 @@ RUN printf '#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\n
     && rm /tmp/pgd.c
 ENV LD_PRELOAD=/usr/lib/posix_getdents.so
 
-FROM runtime AS claude
+RUN /home/node/.tools && \
+    chown -R node:node /home/node/.tools
 
 USER node
+
+FROM runtime AS claude
+
 COPY package.json /tmp/package.json
 RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' /tmp/package.json)
 ENV PATH="/home/node/.local/bin:${PATH}"
@@ -160,7 +164,6 @@ ENTRYPOINT ["claude"]
 
 FROM runtime AS opencode
 
-USER node
 COPY package.json /tmp/package.json
 RUN curl -fsSL https://opencode.ai/install | bash -s -- \
       --version $(jq -r '.devDependencies."opencode-ai"' /tmp/package.json) \
@@ -173,7 +176,6 @@ ENTRYPOINT ["opencode"]
 
 FROM runtime AS codex
 
-USER node
 WORKDIR /home/node/.tools
 COPY package.json ./
 RUN npm install $(jq -r '.dependencies."@openai/codex" | "@openai/codex@" + .' package.json)
@@ -183,7 +185,6 @@ ENTRYPOINT ["codex"]
 
 FROM runtime AS copilot
 
-USER node
 WORKDIR /home/node/.tools
 COPY package.json ./
 RUN npm install $(jq -r '.dependencies."@github/copilot" | "@github/copilot@" + .' package.json)
