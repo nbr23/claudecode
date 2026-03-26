@@ -149,7 +149,7 @@ RUN printf '#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\n
     && rm /tmp/pgd.c
 ENV LD_PRELOAD=/usr/lib/posix_getdents.so
 
-RUN /home/node/.tools && \
+RUN mkdir -p /home/node/.tools && \
     chown -R node:node /home/node/.tools
 
 USER node
