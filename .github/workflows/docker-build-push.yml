@@ -40,18 +40,22 @@ jobs:
             extra_tags: "nbr23/claudecode:latest\nnbr23/claudecode:claude"
             version_jq: '.devDependencies["@anthropic-ai/claude-code"]'
             version_prefix: claude-code
+            build_arg: CLAUDE_VERSION
           - tool: opencode
             extra_tags: "nbr23/claudecode:opencode"
             version_jq: '.devDependencies["opencode-ai"]'
             version_prefix: opencode
+            build_arg: OPENCODE_VERSION
           - tool: codex
             extra_tags: "nbr23/claudecode:codex"
             version_jq: '.dependencies["@openai/codex"]'
             version_prefix: codex
+            build_arg: CODEX_VERSION
           - tool: copilot
             extra_tags: "nbr23/claudecode:copilot"
             version_jq: '.dependencies["@github/copilot"]'
             version_prefix: copilot
+            build_arg: COPILOT_VERSION
 
     steps:
     - name: Checkout code
@@ -80,6 +84,7 @@ jobs:
         target: ${{ matrix.tool }}
         platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
+        build-args: ${{ matrix.build_arg }}=${{ steps.versions.outputs.version }}
         tags: |
           ${{ matrix.extra_tags }}
           nbr23/claudecode:${{ matrix.version_prefix }}-${{ steps.versions.outputs.version }}
