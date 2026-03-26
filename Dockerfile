@@ -110,7 +110,7 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
     mv google-cloud-sdk /opt/ && \
     rm -f "google-cloud-cli-linux-${ARCH}.tar.gz"
 
-FROM base
+FROM base AS runtime
 
 USER root
 
@@ -143,25 +143,52 @@ USER node
 
 RUN npm install -g pnpm
 
-WORKDIR /home/node/.tools
-COPY package.json ./
-RUN npm install --omit=dev
-ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
-
 USER root
 RUN printf '#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\nssize_t posix_getdents(unsigned int fd, void *buf, size_t buflen, long *basep) { return syscall(SYS_getdents64, fd, buf, buflen); }\n' > /tmp/pgd.c \
     && cc -shared -fPIC -nostartfiles -o /usr/lib/posix_getdents.so /tmp/pgd.c \
     && rm /tmp/pgd.c
 ENV LD_PRELOAD=/usr/lib/posix_getdents.so
-USER node
 
-RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' package.json)
-RUN curl -fsSL https://opencode.ai/install | bash -s -- --version $(jq -r '.devDependencies."opencode-ai"' package.json) --no-modify-path && \
+FROM runtime AS claude
+
+USER node
+COPY package.json /tmp/package.json
+RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' /tmp/package.json)
+ENV PATH="/home/node/.local/bin:${PATH}"
+WORKDIR /home/node
+ENTRYPOINT ["claude"]
+
+FROM runtime AS opencode
+
+USER node
+COPY package.json /tmp/package.json
+RUN curl -fsSL https://opencode.ai/install | bash -s -- \
+      --version $(jq -r '.devDependencies."opencode-ai"' /tmp/package.json) \
+      --no-modify-path && \
     mkdir -p /home/node/.local && \
     mv /home/node/.opencode /home/node/.local/opencode
-
 ENV PATH="/home/node/.local/bin:/home/node/.local/opencode/bin:${PATH}"
-
 WORKDIR /home/node
+ENTRYPOINT ["opencode"]
 
-ENTRYPOINT ["claude"]
+FROM runtime AS codex
+
+USER node
+WORKDIR /home/node/.tools
+COPY package.json ./
+RUN npm install $(jq -r '.dependencies."@openai/codex" | "@openai/codex@" + .' package.json)
+ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
+WORKDIR /home/node
+ENTRYPOINT ["codex"]
+
+FROM runtime AS copilot
+
+USER node
+WORKDIR /home/node/.tools
+COPY package.json ./
+RUN npm install $(jq -r '.dependencies."@github/copilot" | "@github/copilot@" + .' package.json)
+ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
+WORKDIR /home/node
+ENTRYPOINT ["copilot"]
+
+FROM claude

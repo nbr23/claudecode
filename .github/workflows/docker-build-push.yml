@@ -12,6 +12,26 @@ jobs:
   build-claudecode:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - tool: claude
+            extra_tags: "nbr23/claudecode:latest\nnbr23/claudecode:claude"
+            version_jq: '.devDependencies["@anthropic-ai/claude-code"]'
+            version_prefix: claude-code
+          - tool: opencode
+            extra_tags: "nbr23/claudecode:opencode"
+            version_jq: '.devDependencies["opencode-ai"]'
+            version_prefix: opencode
+          - tool: codex
+            extra_tags: "nbr23/claudecode:codex"
+            version_jq: '.dependencies["@openai/codex"]'
+            version_prefix: codex
+          - tool: copilot
+            extra_tags: "nbr23/claudecode:copilot"
+            version_jq: '.dependencies["@github/copilot"]'
+            version_prefix: copilot
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -26,29 +46,24 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Extract dependency versions
+    - name: Extract version
       id: versions
       run: |
-        CLAUDE_CODE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)
-        CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)
-        COPILOT_VERSION=$(jq -r '.dependencies["@github/copilot"]' package.json)
-        echo "claude-code=$CLAUDE_CODE_VERSION" >> $GITHUB_OUTPUT
-        echo "codex=$CODEX_VERSION" >> $GITHUB_OUTPUT
-        echo "copilot=$COPILOT_VERSION" >> $GITHUB_OUTPUT
+        VERSION=$(jq -r '${{ matrix.version_jq }}' package.json)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
+        target: ${{ matrix.tool }}
         platforms: linux/amd64,linux/arm64
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
-          nbr23/claudecode:latest
-          nbr23/claudecode:claude-code-${{ steps.versions.outputs.claude-code }}
-          nbr23/claudecode:codex-${{ steps.versions.outputs.codex }}
-          nbr23/claudecode:copilot-${{ steps.versions.outputs.copilot }}
-        cache-from: type=gha,scope=claudecode
-        cache-to: type=gha,mode=max,scope=claudecode
+          ${{ matrix.extra_tags }}
+          nbr23/claudecode:${{ matrix.version_prefix }}-${{ steps.versions.outputs.version }}
+        cache-from: type=gha,scope=claudecode-${{ matrix.tool }}
+        cache-to: type=gha,mode=max,scope=claudecode-${{ matrix.tool }}
 
   build-gemini-cli:
     runs-on: ubuntu-latest
