@@ -156,38 +156,39 @@ USER node
 
 FROM runtime AS claude
 
-COPY package.json /tmp/package.json
-RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' /tmp/package.json)
+COPY --chown=node:node package.json /tmp/package.json
+RUN curl -fsSL https://claude.ai/install.sh | bash -s $(jq -r '.devDependencies."@anthropic-ai/claude-code"' /tmp/package.json) && rm /tmp/package.json
 ENV PATH="/home/node/.local/bin:${PATH}"
 WORKDIR /home/node
 ENTRYPOINT ["claude"]
 
 FROM runtime AS opencode
 
-COPY package.json /tmp/package.json
+COPY --chown=node:node package.json /tmp/package.json
 RUN curl -fsSL https://opencode.ai/install | bash -s -- \
       --version $(jq -r '.devDependencies."opencode-ai"' /tmp/package.json) \
       --no-modify-path && \
     mkdir -p /home/node/.local && \
-    mv /home/node/.opencode /home/node/.local/opencode
+    mv /home/node/.opencode /home/node/.local/opencode \
+    && rm /tmp/package.json
 ENV PATH="/home/node/.local/bin:/home/node/.local/opencode/bin:${PATH}"
 WORKDIR /home/node
 ENTRYPOINT ["opencode"]
 
 FROM runtime AS codex
 
+COPY --chown=node:node package.json /tmp/package.json
 WORKDIR /home/node/.tools
-COPY package.json ./
-RUN npm install $(jq -r '.dependencies."@openai/codex" | "@openai/codex@" + .' package.json)
+RUN npm install $(jq -r '.dependencies."@openai/codex" | "@openai/codex@" + .' /tmp/package.json) && rm /tmp/package.json
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 WORKDIR /home/node
 ENTRYPOINT ["codex"]
 
 FROM runtime AS copilot
 
+COPY --chown=node:node package.json /tmp/package.json
 WORKDIR /home/node/.tools
-COPY package.json ./
-RUN npm install $(jq -r '.dependencies."@github/copilot" | "@github/copilot@" + .' package.json)
+RUN npm install $(jq -r '.dependencies."@github/copilot" | "@github/copilot@" + .' /tmp/package.json) && rm /tmp/package.json
 ENV PATH="/home/node/.tools/node_modules/.bin:${PATH}"
 WORKDIR /home/node
 ENTRYPOINT ["copilot"]
