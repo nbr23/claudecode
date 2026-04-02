@@ -49,7 +49,8 @@ RUN apk add --no-cache \
     yq \
     pngquant \
     imagemagick \
-    ffmpeg
+    ffmpeg \
+    hugo
 
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache github-cli@edge
