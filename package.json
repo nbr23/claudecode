@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Claude code in docker",
   "dependencies": {
-    "@github/copilot": "1.0.25",
+    "@github/copilot": "1.0.26",
     "@openai/codex": "0.120.0"
   },
   "devDependencies": {
