@@ -61,6 +61,14 @@ RUN apk add --no-cache \
     ninja \
     gcompat
 
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
 ENV FLUTTER_HOME=/opt/flutter
 ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
 
@@ -140,9 +148,14 @@ ENV USE_BUILTIN_RIPGREP=0
 ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
 ENV CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 USER node
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp
 
 USER root
 RUN printf '#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\nssize_t posix_getdents(unsigned int fd, void *buf, size_t buflen, long *basep) { return syscall(SYS_getdents64, fd, buf, buflen); }\n' > /tmp/pgd.c \
