@@ -50,6 +50,8 @@ RUN apk add --no-cache \
     pngquant \
     imagemagick \
     ffmpeg \
+    graphviz \
+    font-noto \
     hugo
 
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
