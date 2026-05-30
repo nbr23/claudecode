@@ -72,16 +72,16 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-ENV FLUTTER_HOME=/opt/flutter
-ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+# ENV FLUTTER_HOME=/opt/flutter
+# ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
 
-RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter && \
-    chown -R node:node /opt/flutter
+# RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter && \
+#     chown -R node:node /opt/flutter
 
-USER node
-RUN cd /opt/flutter && \
-    flutter precache --linux && \
-    flutter config --no-analytics
+# USER node
+# RUN cd /opt/flutter && \
+#     flutter precache --linux && \
+#     flutter config --no-analytics
 
 USER root
 
