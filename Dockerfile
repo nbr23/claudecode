@@ -51,8 +51,9 @@ RUN apk add --no-cache \
     imagemagick \
     ffmpeg \
     graphviz \
-    font-noto \
-    hugo
+    font-noto
+
+RUN GOBIN=/usr/local/bin CGO_ENABLED=1 GOTOOLCHAIN=auto go install -tags extended github.com/gohugoio/hugo@latest
 
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache github-cli@edge
