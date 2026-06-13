@@ -9,6 +9,6 @@
   "devDependencies": {
     "@anthropic-ai/claude-code": "2.1.176",
     "@google/gemini-cli": "0.46.0",
-    "opencode-ai": "1.17.3"
+    "opencode-ai": "1.17.4"
   }
 }
