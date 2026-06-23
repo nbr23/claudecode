@@ -95,7 +95,7 @@ jobs:
             type=gha,scope=claudecode-${{ matrix.tool }}
           cache-to: type=gha,mode=max,scope=claudecode-${{ matrix.tool }}
 
-  build-gemini-cli:
+  build-antigravity:
     runs-on: ubuntu-latest
 
     steps:
@@ -112,22 +112,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract gemini version
-        id: versions
-        run: |
-          GEMINI_VERSION=$(jq -r '.devDependencies["@google/gemini-cli"]' package.json)
-          echo "gemini=$GEMINI_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build and push gemini-cli image
+      - name: Build and push antigravity image
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile.gemini
+          file: Dockerfile.antigravity
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          build-args: GEMINI_VERSION=${{ steps.versions.outputs.gemini }}
           tags: |
-            nbr23/gemini-cli:latest
-            nbr23/gemini-cli:${{ steps.versions.outputs.gemini }}
-          cache-from: type=gha,scope=gemini-cli
-          cache-to: type=gha,mode=max,scope=gemini-cli
+            nbr23/antigravity:latest
+          cache-from: type=gha,scope=antigravity
+          cache-to: type=gha,mode=max,scope=antigravity

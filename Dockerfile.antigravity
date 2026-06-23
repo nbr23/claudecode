@@ -102,8 +102,7 @@ USER node
 
 RUN npm install -g pnpm
 
-ARG GEMINI_VERSION
-RUN npm install -g @google/gemini-cli@${GEMINI_VERSION} \
-  && npm cache clean --force
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
+ENV PATH="/home/node/.local/bin:${PATH}"
 
-CMD ["gemini"]
+CMD ["agy"]
