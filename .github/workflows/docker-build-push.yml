@@ -48,6 +48,8 @@ jobs:
             version_jq: '.devDependencies["opencode-ai"]'
             version_prefix: opencode
             build_arg: OPENCODE_VERSION
+            extra_build_arg: OPENCODE_GEMINI_AUTH_VERSION
+            extra_version_jq: '.devDependencies["opencode-gemini-auth"]'
           # - tool: codex
           #   extra_tags: "nbr23/claudecode:codex"
           #   version_jq: '.dependencies["@openai/codex"]'
@@ -78,6 +80,10 @@ jobs:
         run: |
           VERSION=$(jq -r '${{ matrix.version_jq }}' package.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ -n "${{ matrix.extra_version_jq }}" ]; then
+            EXTRA_VERSION=$(jq -r '${{ matrix.extra_version_jq }}' package.json)
+            echo "extra_version=$EXTRA_VERSION" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -86,7 +92,9 @@ jobs:
           target: ${{ matrix.tool }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          build-args: ${{ matrix.build_arg }}=${{ steps.versions.outputs.version }}
+          build-args: |
+            ${{ matrix.build_arg }}=${{ steps.versions.outputs.version }}
+            ${{ matrix.extra_build_arg && format('{0}={1}', matrix.extra_build_arg, steps.versions.outputs.extra_version) || '' }}
           tags: |
             ${{ matrix.extra_tags }}
             nbr23/claudecode:${{ matrix.version_prefix }}-${{ steps.versions.outputs.version }}
