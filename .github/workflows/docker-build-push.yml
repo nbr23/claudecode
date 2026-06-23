@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 concurrency:
   group: docker-build-${{ github.ref }}
@@ -40,14 +40,14 @@ jobs:
             extra_tags: "nbr23/claudecode:latest
 
               nbr23/claudecode:claude"
-            version_jq: ".devDependencies[\"@anthropic-ai/claude-code\"]"
+            version_jq: '.devDependencies["@anthropic-ai/claude-code"]'
             version_prefix: claude-code
             build_arg: CLAUDE_VERSION
-          # - tool: opencode
-          #   extra_tags: "nbr23/claudecode:opencode"
-          #   version_jq: '.devDependencies["opencode-ai"]'
-          #   version_prefix: opencode
-          #   build_arg: OPENCODE_VERSION
+          - tool: opencode
+            extra_tags: "nbr23/claudecode:opencode"
+            version_jq: '.devDependencies["opencode-ai"]'
+            version_prefix: opencode
+            build_arg: OPENCODE_VERSION
           # - tool: codex
           #   extra_tags: "nbr23/claudecode:codex"
           #   version_jq: '.dependencies["@openai/codex"]'
