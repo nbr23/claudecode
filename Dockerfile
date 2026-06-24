@@ -70,7 +70,10 @@ RUN apk add --no-cache \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    xvfb \
+    mesa-dri-gallium \
+    mesa-gl
 
 # ENV FLUTTER_HOME=/opt/flutter
 # ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
