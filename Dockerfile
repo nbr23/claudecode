@@ -71,6 +71,7 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
+    font-noto-emoji \
     xvfb \
     mesa-dri-gallium \
     mesa-gl
