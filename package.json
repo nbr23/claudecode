@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/claude-code": "2.1.198",
-    "opencode-ai": "1.17.12",
+    "opencode-ai": "1.17.13",
     "opencode-gemini-auth": "1.4.15"
   }
 }
