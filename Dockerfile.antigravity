@@ -33,16 +33,16 @@ RUN mkdir -p /usr/local/share/npm-global \
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
 ENV PATH=$PATH:/usr/local/share/npm-global/bin
 
-ENV FLUTTER_HOME=/opt/flutter
-ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+# ENV FLUTTER_HOME=/opt/flutter
+# ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
 
-RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter \
-    && chown -R node:node /opt/flutter
+# RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter \
+#     && chown -R node:node /opt/flutter
 
-USER node
-RUN flutter precache --linux && flutter config --no-analytics
+# USER node
+# RUN flutter precache --linux && flutter config --no-analytics
 
-USER root
+# USER root
 
 FROM base AS tools-builder
 
@@ -93,6 +93,12 @@ RUN HUGO_VERSION=$(curl -s https://api.github.com/repos/gohugoio/hugo/releases/l
     mv hugo /usr/local/bin/ && \
     rm hugo.tar.gz
 
+RUN COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m) && \
+    mkdir -p /usr/local/lib/docker/cli-plugins && \
+    curl -L "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-${ARCH}" -o /usr/local/lib/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
 FROM base
 
 USER root
@@ -103,6 +109,7 @@ COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/yq /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/hugo /usr/local/bin/
+COPY --from=tools-builder /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose
 COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
 
 RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
