@@ -11,9 +11,20 @@ RUN apt update && apt install -y --no-install-recommends \
     fzf zsh wget gnupg \
     iptables ipset iproute2 \
     coreutils tzdata \
-    pngquant imagemagick ffmpeg \
+    pngquant imagemagick ffmpeg graphviz \
     xz-utils libglu1-mesa \
     man-db curl dnsutils less jq bc gh git unzip rsync ripgrep procps psmisc lsof socat ca-certificates \
+  && apt clean \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN apt update && apt install -y --no-install-recommends \
+    chromium \
+    fonts-freefont-ttf \
+    fonts-noto-core \
+    fonts-noto-color-emoji \
+    xvfb \
+    libgl1-mesa-dri \
+    libglx-mesa0 \
   && apt clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -75,6 +86,13 @@ RUN YQ_VERSION=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/late
     curl -L "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${ARCH}" -o /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
 
+RUN HUGO_VERSION=$(curl -s https://api.github.com/repos/gohugoio/hugo/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-${ARCH}.tar.gz" -o hugo.tar.gz && \
+    tar -zxf hugo.tar.gz hugo && \
+    mv hugo /usr/local/bin/ && \
+    rm hugo.tar.gz
+
 FROM base
 
 USER root
@@ -84,6 +102,7 @@ COPY --from=tools-builder /usr/local/bin/terragrunt /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/yq /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/hugo /usr/local/bin/
 COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
 
 RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
@@ -98,9 +117,21 @@ ENV DISABLE_TELEMETRY=1
 ENV DISABLE_ERROR_REPORTING=1
 ENV DISABLE_AUTOUPDATER=1
 
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PLAYWRIGHT_BROWSERS_PATH=/usr/local/ms-playwright
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV NODE_PATH=/usr/local/share/npm-global/lib/node_modules
+
+RUN mkdir -p /usr/local/ms-playwright /home/node/.tools /home/node/.config/gcloud && \
+    chown -R node:node /usr/local/ms-playwright /home/node/.tools /home/node/.config
+
 USER node
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer
+
+RUN npx playwright install ffmpeg
 
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 ENV PATH="/home/node/.local/bin:${PATH}"
