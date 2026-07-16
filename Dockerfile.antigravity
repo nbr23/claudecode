@@ -136,7 +136,7 @@ RUN mkdir -p /usr/local/ms-playwright /home/node/.tools /home/node/.config/gclou
 
 USER node
 
-RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer tsx typescript
 
 RUN npx playwright install ffmpeg
 
