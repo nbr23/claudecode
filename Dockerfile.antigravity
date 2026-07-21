@@ -142,7 +142,7 @@ RUN npx playwright install ffmpeg
 
 # renovate: datasource=custom.antigravity-cli depName=antigravity-cli
 ARG ANTIGRAVITY_VERSION=1.1.5
-RUN set -euo pipefail; \
+RUN set -eu; \
     arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
     manifest_url="https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_${arch}.json"; \
     manifest=$(curl -fsSL "$manifest_url"); \
