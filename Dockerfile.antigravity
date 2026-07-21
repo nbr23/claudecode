@@ -140,7 +140,26 @@ RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer
 
 RUN npx playwright install ffmpeg
 
-RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
+# renovate: datasource=custom.antigravity-cli depName=antigravity-cli
+ARG ANTIGRAVITY_VERSION=1.1.5
+RUN set -euo pipefail; \
+    arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
+    manifest_url="https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_${arch}.json"; \
+    manifest=$(curl -fsSL "$manifest_url"); \
+    version=$(echo "$manifest" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'); \
+    if [ "$version" != "$ANTIGRAVITY_VERSION" ]; then \
+      echo "Fatal: antigravity-cli manifest reports version $version, expected $ANTIGRAVITY_VERSION. Bump ANTIGRAVITY_VERSION to match." >&2; \
+      exit 1; \
+    fi; \
+    url=$(echo "$manifest" | sed -n 's/.*"url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'); \
+    sha512=$(echo "$manifest" | sed -n 's/.*"sha512"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'); \
+    mkdir -p "$HOME/.local/bin"; \
+    curl -fsSL -o /tmp/agy.tar.gz "$url"; \
+    echo "$sha512  /tmp/agy.tar.gz" | sha512sum -c -; \
+    tar -xzf /tmp/agy.tar.gz -C /tmp antigravity; \
+    mv /tmp/antigravity "$HOME/.local/bin/agy"; \
+    chmod +x "$HOME/.local/bin/agy"; \
+    rm -f /tmp/agy.tar.gz
 ENV PATH="/home/node/.local/bin:${PATH}"
 
 CMD ["agy"]

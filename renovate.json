@@ -9,5 +9,12 @@
       "automergeType": "pr",
       "automergeStrategy": "rebase"
     }
-  ]
+  ],
+  "customDatasources": {
+    "antigravity-cli": {
+      "defaultRegistryUrlTemplate": "https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json",
+      "format": "json",
+      "transformTemplates": ["{\"releases\": [{\"version\": version}]}"]
+    }
+  }
 }
