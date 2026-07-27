@@ -10,6 +10,13 @@
       "automergeStrategy": "rebase"
     }
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^Dockerfile\\.antigravity$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)\\s+ARG ANTIGRAVITY_VERSION=(?<currentValue>[^\\s]+)"]
+    }
+  ],
   "customDatasources": {
     "antigravity-cli": {
       "defaultRegistryUrlTemplate": "https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json",
