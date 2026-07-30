@@ -4,7 +4,7 @@
   "dependencyDashboard": false,
   "packageRules": [
     {
-      "matchPackageNames": ["@anthropic-ai/claude-code", "opencode-ai", "opencode-gemini-auth"],
+      "matchPackageNames": ["@anthropic-ai/claude-code", "opencode-ai", "opencode-gemini-auth", "antigravity-cli"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
