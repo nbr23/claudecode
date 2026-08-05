@@ -120,6 +120,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ARG TZ=America/New_York
 ENV TZ=${TZ}
+
+ENV TERM=xterm-256color
+
 ENV DISABLE_TELEMETRY=1
 ENV DISABLE_ERROR_REPORTING=1
 ENV DISABLE_AUTOUPDATER=1
