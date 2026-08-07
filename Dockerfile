@@ -52,6 +52,7 @@ RUN apk add --no-cache \
     imagemagick \
     ffmpeg \
     graphviz \
+    poppler-utils \
     font-noto
 
 RUN GOBIN=/usr/local/bin CGO_ENABLED=1 GOTOOLCHAIN=auto go install -tags extended github.com/gohugoio/hugo@latest
