@@ -78,6 +78,7 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
     curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-${ARCH}.tar.gz" && \
     tar -xf "google-cloud-cli-linux-${ARCH}.tar.gz" && \
     ./google-cloud-sdk/install.sh --quiet --path-update false && \
+    ./google-cloud-sdk/bin/gcloud components install gke-gcloud-auth-plugin --quiet && \
     mv google-cloud-sdk /opt/ && \
     rm -f "google-cloud-cli-linux-${ARCH}.tar.gz"
 
@@ -114,7 +115,10 @@ COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
 
 RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
     ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
-    ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq
+    ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq && \
+    ln -s /opt/google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
+
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
