@@ -173,7 +173,7 @@ ENV NODE_PATH=/usr/local/lib/node_modules
 
 USER node
 
-RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer tsx typescript
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript
 
 RUN npx playwright install ffmpeg
 
