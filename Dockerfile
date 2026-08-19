@@ -51,6 +51,7 @@ RUN apk add --no-cache \
     pngquant \
     imagemagick \
     ffmpeg \
+    sox \
     graphviz \
     poppler-utils \
     font-noto

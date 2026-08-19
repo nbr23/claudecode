@@ -11,7 +11,7 @@ RUN apt update && apt install -y --no-install-recommends \
     fzf zsh wget gnupg \
     iptables ipset iproute2 \
     coreutils tzdata \
-    pngquant imagemagick ffmpeg graphviz poppler-utils \
+    pngquant imagemagick ffmpeg sox graphviz poppler-utils \
     xz-utils libglu1-mesa \
     man-db curl dnsutils less jq bc gh git unzip rsync ripgrep procps psmisc lsof socat ca-certificates \
   && apt clean \
