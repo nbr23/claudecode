@@ -8,6 +8,14 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/astral-sh/uv"],
+      "schedule": ["before 4am on monday"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "rebase"
     }
   ],
   "customManagers": [

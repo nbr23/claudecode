@@ -1,4 +1,4 @@
-FROM node:22-slim AS base
+FROM node:22-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5 AS base
 
 USER root
 
@@ -120,8 +120,6 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
 
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
 ARG TZ=America/New_York
 ENV TZ=${TZ}
 
@@ -146,6 +144,8 @@ USER node
 RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript
 
 RUN npx playwright install ffmpeg
+
+COPY --from=ghcr.io/astral-sh/uv:0.12.10 /uv /uvx /bin/
 
 # renovate: datasource=custom.antigravity-cli depName=antigravity-cli
 ARG ANTIGRAVITY_VERSION=1.1.27

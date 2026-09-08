@@ -1,4 +1,4 @@
-FROM node:25-alpine3.22 AS base
+FROM node:24-alpine3.22@sha256:191c9f0080fcbbc6547a85dc0ff7988072214a355aabdc1d2ec55a7dae5eea8a AS base
 
 USER root
 
@@ -156,8 +156,6 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
 
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
 RUN chown -R node:node /usr/local
 
 ARG TZ=America/New_York
@@ -197,6 +195,8 @@ RUN mkdir -p /home/node/.tools && \
     chown -R node:node /home/node/.tools && \
     mkdir -p /home/node/.config/gcloud && \
     chown -R node:node /home/node/.config
+
+COPY --from=ghcr.io/astral-sh/uv:0.12.10 /uv /uvx /bin/
 
 USER node
 
