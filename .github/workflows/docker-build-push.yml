@@ -9,62 +9,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-claudecode:
-    runs-on: ubuntu-latest
+  claudecode:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      targets: claudecode
+      image: nbr23/claudecode
+    secrets: inherit
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Extract tool versions
-        run: |
-          {
-            echo "CLAUDE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
-            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["opencode-ai"]' package.json)"
-            echo "OPENCODE_GEMINI_AUTH_VERSION=$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
-            echo "CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)"
-          } >> "$GITHUB_ENV"
-
-      - name: Build and push tool images
-        uses: docker/bake-action@v7
-        with:
-          source: .
-          push: true
-
-  build-antigravity:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log in to Docker Hub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push antigravity image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Dockerfile.antigravity
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            nbr23/antigravity:latest
-          cache-from: type=registry,ref=nbr23/antigravity:buildcache
-          cache-to: type=registry,ref=nbr23/antigravity:buildcache,mode=max
+  antigravity:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      targets: antigravity
+      image: nbr23/antigravity
+    secrets: inherit

@@ -1,0 +1,126 @@
+name: Build multi-platform image
+
+on:
+  workflow_call:
+    inputs:
+      targets:
+        description: Bake group or target to build
+        required: true
+        type: string
+      image:
+        description: Registry image that receives the per-platform digests and the final tags
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract tool versions
+        run: |
+          {
+            echo "CLAUDE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
+            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["opencode-ai"]' package.json)"
+            echo "OPENCODE_GEMINI_AUTH_VERSION=$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
+            echo "CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)"
+          } >> "$GITHUB_ENV"
+
+      - name: Build and push by digest
+        id: bake
+        uses: docker/bake-action@v7
+        with:
+          source: .
+          targets: ${{ inputs.targets }}
+          vars: CACHE_SUFFIX=-${{ matrix.arch }}
+          set: |
+            *.platform=${{ matrix.platform }}
+            *.tags=
+            *.output=type=image,"name=${{ inputs.image }}",push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digests
+        env:
+          METADATA: ${{ steps.bake.outputs.metadata }}
+        run: |
+          jq -r 'to_entries[] | select(.value | type == "object" and has("containerimage.digest")) | "\(.key) \(.value["containerimage.digest"])"' <<< "$METADATA" |
+          while read -r target digest; do
+            mkdir -p "${RUNNER_TEMP}/digests/${target}"
+            touch "${RUNNER_TEMP}/digests/${target}/${digest#sha256:}"
+          done
+
+      - name: Upload digests
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ inputs.targets }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ inputs.targets }}-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract tool versions
+        run: |
+          {
+            echo "CLAUDE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
+            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["opencode-ai"]' package.json)"
+            echo "OPENCODE_GEMINI_AUTH_VERSION=$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
+            echo "CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)"
+          } >> "$GITHUB_ENV"
+
+      - name: Create and push manifest lists
+        env:
+          IMAGE: ${{ inputs.image }}
+        run: |
+          for dir in "${RUNNER_TEMP}"/digests/*/; do
+            target=$(basename "$dir")
+            mapfile -t tags < <(docker buildx bake --print "$target" 2>/dev/null | jq -r --arg t "$target" '.target[$t].tags[] | "--tag", .')
+            refs=()
+            for f in "$dir"*; do
+              refs+=("${IMAGE}@sha256:$(basename "$f")")
+            done
+            docker buildx imagetools create "${tags[@]}" "${refs[@]}"
+          done
