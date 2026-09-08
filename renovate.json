@@ -11,7 +11,9 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/astral-sh/uv"],
+      "matchPackageNames": ["node", "ghcr.io/astral-sh/uv"],
+      "matchUpdateTypes": ["digest", "minor", "patch"],
+      "groupName": "base images",
       "schedule": ["before 4am on monday"],
       "automerge": true,
       "automergeType": "pr",
