@@ -5,6 +5,7 @@
   "packageRules": [
     {
       "matchPackageNames": ["@openai/codex", "@anthropic-ai/claude-code", "opencode-ai", "opencode-gemini-auth", "antigravity-cli"],
+      "schedule": ["at any time"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
