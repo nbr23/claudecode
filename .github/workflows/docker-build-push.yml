@@ -50,11 +50,11 @@ jobs:
             build_arg: OPENCODE_VERSION
             extra_build_arg: OPENCODE_GEMINI_AUTH_VERSION
             extra_version_jq: '.devDependencies["opencode-gemini-auth"]'
-          # - tool: codex
-          #   extra_tags: "nbr23/claudecode:codex"
-          #   version_jq: '.dependencies["@openai/codex"]'
-          #   version_prefix: codex
-          #   build_arg: CODEX_VERSION
+          - tool: codex
+            extra_tags: "nbr23/claudecode:codex"
+            version_jq: '.dependencies["@openai/codex"]'
+            version_prefix: codex
+            build_arg: CODEX_VERSION
           # - tool: copilot
           #   extra_tags: "nbr23/claudecode:copilot"
           #   version_jq: '.dependencies["@github/copilot"]'
