@@ -9,63 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-runtime:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build runtime stage
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          target: runtime
-          platforms: linux/amd64,linux/arm64
-          push: false
-          cache-from: type=registry,ref=nbr23/claudecode:buildcache-runtime
-          cache-to: type=registry,ref=nbr23/claudecode:buildcache-runtime,mode=max
-
   build-claudecode:
     runs-on: ubuntu-latest
-    needs: build-runtime
-
-    strategy:
-      matrix:
-        include:
-          - tool: claude
-            extra_tags: "nbr23/claudecode:latest
-
-              nbr23/claudecode:claude"
-            version_jq: '.devDependencies["@anthropic-ai/claude-code"]'
-            version_prefix: claude-code
-            build_arg: CLAUDE_VERSION
-          - tool: opencode
-            extra_tags: "nbr23/claudecode:opencode"
-            version_jq: '.devDependencies["opencode-ai"]'
-            version_prefix: opencode
-            build_arg: OPENCODE_VERSION
-            extra_build_arg: OPENCODE_GEMINI_AUTH_VERSION
-            extra_version_jq: '.devDependencies["opencode-gemini-auth"]'
-          - tool: codex
-            extra_tags: "nbr23/claudecode:codex"
-            version_jq: '.dependencies["@openai/codex"]'
-            version_prefix: codex
-            build_arg: CODEX_VERSION
-          # - tool: copilot
-          #   extra_tags: "nbr23/claudecode:copilot"
-          #   version_jq: '.dependencies["@github/copilot"]'
-          #   version_prefix: copilot
-          #   build_arg: COPILOT_VERSION
 
     steps:
       - name: Checkout code
@@ -75,39 +20,25 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Log in to Docker Hub
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version
-        id: versions
+      - name: Extract tool versions
         run: |
-          VERSION=$(jq -r '${{ matrix.version_jq }}' package.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if [ -n "${{ matrix.extra_version_jq }}" ]; then
-            EXTRA_VERSION=$(jq -r '${{ matrix.extra_version_jq }}' package.json)
-            echo "extra_version=$EXTRA_VERSION" >> $GITHUB_OUTPUT
-          fi
+          {
+            echo "CLAUDE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
+            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["opencode-ai"]' package.json)"
+            echo "OPENCODE_GEMINI_AUTH_VERSION=$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
+            echo "CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)"
+          } >> "$GITHUB_ENV"
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
+      - name: Build and push tool images
+        uses: docker/bake-action@v7
         with:
-          context: .
-          target: ${{ matrix.tool }}
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          build-args: |
-            ${{ matrix.build_arg }}=${{ steps.versions.outputs.version }}
-            ${{ matrix.extra_build_arg && format('{0}={1}', matrix.extra_build_arg, steps.versions.outputs.extra_version) || '' }}
-          tags: |
-            ${{ matrix.extra_tags }}
-            nbr23/claudecode:${{ matrix.version_prefix }}-${{ steps.versions.outputs.version }}
-          cache-from: |
-            type=registry,ref=nbr23/claudecode:buildcache-runtime
-            type=registry,ref=nbr23/claudecode:buildcache-${{ matrix.tool }}
-          cache-to: type=registry,ref=nbr23/claudecode:buildcache-${{ matrix.tool }},mode=max
+          source: .
+          push: true
 
   build-antigravity:
     runs-on: ubuntu-latest
