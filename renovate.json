@@ -13,7 +13,15 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["node", "ghcr.io/astral-sh/uv"],
       "matchUpdateTypes": ["digest", "minor", "patch"],
-      "groupName": "base images",
+      "groupName": "toolchain",
+      "schedule": ["before 4am on monday"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "rebase"
+    },
+    {
+      "matchDatasources": ["github-releases", "custom.gcloud-sdk"],
+      "groupName": "toolchain",
       "schedule": ["before 4am on monday"],
       "automerge": true,
       "automergeType": "pr",
@@ -23,13 +31,19 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile\\.antigravity$/"],
-      "matchStrings": ["# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)\\s+ARG ANTIGRAVITY_VERSION=(?<currentValue>[^\\s]+)"]
+      "managerFilePatterns": ["/^Dockerfile(\\.[a-z]+)?$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)\\s+ARG [A-Z_]+_VERSION=(?<currentValue>[^\\s]+)"],
+      "extractVersionTemplate": "^v?(?<version>.*)$"
     }
   ],
   "customDatasources": {
     "antigravity-cli": {
       "defaultRegistryUrlTemplate": "https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json",
+      "format": "json",
+      "transformTemplates": ["{\"releases\": [{\"version\": version}]}"]
+    },
+    "gcloud-sdk": {
+      "defaultRegistryUrlTemplate": "https://dl.google.com/dl/cloudsdk/channels/rapid/components-2.json",
       "format": "json",
       "transformTemplates": ["{\"releases\": [{\"version\": version}]}"]
     }

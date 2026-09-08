@@ -57,9 +57,6 @@ RUN apk add --no-cache \
     poppler-utils \
     font-noto
 
-RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-    apk add --no-cache github-cli@edge
-
 RUN apk add --no-cache \
     clang \
     cmake \
@@ -91,70 +88,79 @@ RUN apk add --no-cache \
 
 USER root
 
-FROM base AS tools-builder
-
-USER root
+FROM base AS terraform
 WORKDIR /tmp
-
-RUN TERRAFORM_VERSION=$(curl -s https://api.github.com/repos/hashicorp/terraform/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
-    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+# renovate: datasource=github-releases depName=hashicorp/terraform
+ARG TERRAFORM_VERSION=1.16.1
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     wget -q "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
     unzip "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip" && \
     mv terraform /usr/local/bin/ && \
     rm "terraform_${TERRAFORM_VERSION}_linux_${ARCH}.zip"
 
-RUN TERRAGRUNT_VERSION=$(curl -s https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
-    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+FROM base AS terragrunt
+# renovate: datasource=github-releases depName=gruntwork-io/terragrunt
+ARG TERRAGRUNT_VERSION=1.1.4
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     curl -L "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${ARCH}" -o /usr/local/bin/terragrunt && \
     chmod +x /usr/local/bin/terragrunt
 
+FROM base AS kubectl
+WORKDIR /tmp
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
+ARG KUBECTL_VERSION=1.37.0
 RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
-    KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt) && \
-    curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" && \
+    curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" && \
     chmod +x kubectl && \
     mv kubectl /usr/local/bin/
 
+FROM base AS helm
+WORKDIR /tmp
+# renovate: datasource=github-releases depName=helm/helm
+ARG HELM_VERSION=4.2.4
 RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
-    HELM_VERSION=$(curl -s https://api.github.com/repos/helm/helm/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
     wget -q "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" && \
     tar -zxf "helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz" && \
     mv "linux-${ARCH}/helm" /usr/local/bin/ && \
     rm -rf "linux-${ARCH}" "helm-v${HELM_VERSION}-linux-${ARCH}.tar.gz"
 
+FROM base AS gcloud
+WORKDIR /tmp
+# renovate: datasource=custom.gcloud-sdk depName=google-cloud-cli
+ARG GCLOUD_VERSION=583.0.0
 RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
-    curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-${ARCH}.tar.gz" && \
-    tar -xf "google-cloud-cli-linux-${ARCH}.tar.gz" && \
+    curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${GCLOUD_VERSION}-linux-${ARCH}.tar.gz" && \
+    tar -xf "google-cloud-cli-${GCLOUD_VERSION}-linux-${ARCH}.tar.gz" && \
     ./google-cloud-sdk/install.sh --quiet --path-update false && \
     ./google-cloud-sdk/bin/gcloud components install gke-gcloud-auth-plugin --quiet && \
     mv google-cloud-sdk /opt/ && \
-    rm -f "google-cloud-cli-linux-${ARCH}.tar.gz"
+    rm -f "google-cloud-cli-${GCLOUD_VERSION}-linux-${ARCH}.tar.gz"
 
+FROM base AS hugo
+WORKDIR /tmp
 # Upstream extended binary is glibc-linked; it runs through gcompat, which `hugo version` verifies at build time
-RUN HUGO_VERSION=$(curl -s https://api.github.com/repos/gohugoio/hugo/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
-    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+# renovate: datasource=github-releases depName=gohugoio/hugo
+ARG HUGO_VERSION=0.165.0
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     curl -L "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-${ARCH}.tar.gz" -o hugo.tar.gz && \
     tar -zxf hugo.tar.gz hugo && \
     mv hugo /usr/local/bin/ && \
     rm hugo.tar.gz && \
     hugo version
 
+FROM base AS gh
+WORKDIR /tmp
+# renovate: datasource=github-releases depName=cli/cli
+ARG GH_VERSION=2.100.0
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.tar.gz" -o gh.tar.gz && \
+    tar -zxf gh.tar.gz "gh_${GH_VERSION}_linux_${ARCH}/bin/gh" && \
+    mv "gh_${GH_VERSION}_linux_${ARCH}/bin/gh" /usr/local/bin/ && \
+    rm -rf gh.tar.gz "gh_${GH_VERSION}_linux_${ARCH}"
+
 FROM base AS runtime
 
 USER root
-
-COPY --from=tools-builder /usr/local/bin/terraform /usr/local/bin/
-COPY --from=tools-builder /usr/local/bin/terragrunt /usr/local/bin/
-COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
-COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
-COPY --from=tools-builder /usr/local/bin/hugo /usr/local/bin/
-COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
-
-RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
-    ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
-    ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq && \
-    ln -s /opt/google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
-
-ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 RUN chown -R node:node /usr/local
 
@@ -195,6 +201,21 @@ RUN mkdir -p /home/node/.tools && \
     chown -R node:node /home/node/.tools && \
     mkdir -p /home/node/.config/gcloud && \
     chown -R node:node /home/node/.config
+
+COPY --from=terraform /usr/local/bin/terraform /usr/local/bin/
+COPY --from=terragrunt /usr/local/bin/terragrunt /usr/local/bin/
+COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/
+COPY --from=helm /usr/local/bin/helm /usr/local/bin/
+COPY --from=hugo /usr/local/bin/hugo /usr/local/bin/
+COPY --from=gh /usr/local/bin/gh /usr/local/bin/
+COPY --from=gcloud /opt/google-cloud-sdk /opt/google-cloud-sdk
+
+RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
+    ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
+    ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq && \
+    ln -s /opt/google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
+
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.10 /uv /uvx /bin/
 
