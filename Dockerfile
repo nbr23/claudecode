@@ -2,7 +2,7 @@ FROM node:24-alpine3.22@sha256:191c9f0080fcbbc6547a85dc0ff7988072214a355aabdc1d2
 
 USER root
 
-RUN apk update && apk add --no-cache \
+RUN apk add --no-cache \
     git \
     ripgrep \
     bash \
@@ -16,10 +16,6 @@ RUN apk update && apk add --no-cache \
     wget \
     curl \
     jq \
-    make \
-    gcc \
-    g++ \
-    musl-dev \
     linux-headers \
     build-base \
     iptables \
@@ -45,7 +41,8 @@ RUN apk add --no-cache \
 
 RUN apk add --no-cache \
     aws-cli \
-    docker \
+    docker-cli \
+    docker-cli-buildx \
     docker-cli-compose \
     yq \
     pngquant \
@@ -162,8 +159,6 @@ FROM base AS runtime
 
 USER root
 
-RUN chown -R node:node /usr/local
-
 ARG TZ=America/New_York
 ENV TZ=${TZ}
 
@@ -183,7 +178,12 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_BROWSERS_PATH=/usr/local/ms-playwright
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV NODE_PATH=/usr/local/lib/node_modules
+ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
+ENV PATH="/usr/local/share/npm-global/bin:${PATH}"
+ENV NODE_PATH=/usr/local/share/npm-global/lib/node_modules
+
+RUN mkdir -p /usr/local/share/npm-global /usr/local/ms-playwright && \
+    chown -R node:node /usr/local/share/npm-global /usr/local/ms-playwright
 
 USER node
 
