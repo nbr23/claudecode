@@ -57,8 +57,6 @@ RUN apk add --no-cache \
     poppler-utils \
     font-noto
 
-RUN GOBIN=/usr/local/bin CGO_ENABLED=1 GOTOOLCHAIN=auto go install -tags extended github.com/gohugoio/hugo@latest
-
 RUN echo "@edge https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache github-cli@edge
 
@@ -131,6 +129,15 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
     mv google-cloud-sdk /opt/ && \
     rm -f "google-cloud-cli-linux-${ARCH}.tar.gz"
 
+# Upstream extended binary is glibc-linked; it runs through gcompat, which `hugo version` verifies at build time
+RUN HUGO_VERSION=$(curl -s https://api.github.com/repos/gohugoio/hugo/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') && \
+    ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-${ARCH}.tar.gz" -o hugo.tar.gz && \
+    tar -zxf hugo.tar.gz hugo && \
+    mv hugo /usr/local/bin/ && \
+    rm hugo.tar.gz && \
+    hugo version
+
 FROM base AS runtime
 
 USER root
@@ -139,6 +146,7 @@ COPY --from=tools-builder /usr/local/bin/terraform /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/terragrunt /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/kubectl /usr/local/bin/
 COPY --from=tools-builder /usr/local/bin/helm /usr/local/bin/
+COPY --from=tools-builder /usr/local/bin/hugo /usr/local/bin/
 COPY --from=tools-builder /opt/google-cloud-sdk /opt/google-cloud-sdk
 
 RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
