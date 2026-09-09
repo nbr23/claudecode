@@ -295,6 +295,11 @@ ENTRYPOINT ["opencode"]
 
 FROM runtime AS codex
 
+# Codex bundles its own bwrap but warns on every start when the system one is missing
+USER root
+RUN apk add --no-cache bubblewrap
+USER node
+
 ARG CODEX_VERSION
 WORKDIR /home/node/.tools
 RUN npm install @openai/codex@${CODEX_VERSION}
