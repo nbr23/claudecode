@@ -72,6 +72,28 @@ RUN apk add --no-cache \
     mesa-dri-gallium \
     mesa-gl
 
+RUN apk add --no-cache \
+    sed \
+    gawk \
+    findutils \
+    diffutils \
+    tar \
+    xz \
+    zstd \
+    zip \
+    openssh-client-default \
+    rsync \
+    socat \
+    lsof \
+    psmisc \
+    tmux \
+    shellcheck \
+    shfmt \
+    actionlint \
+    fd \
+    tree \
+    just
+
 # ENV FLUTTER_HOME=/opt/flutter
 # ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
 
@@ -155,6 +177,29 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     mv "gh_${GH_VERSION}_linux_${ARCH}/bin/gh" /usr/local/bin/ && \
     rm -rf gh.tar.gz "gh_${GH_VERSION}_linux_${ARCH}"
 
+FROM base AS hadolint
+# renovate: datasource=github-releases depName=hadolint/hadolint
+ARG HADOLINT_VERSION=2.15.1
+RUN ARCH=$(uname -m | sed 's/aarch64/arm64/') && \
+    curl -L "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-linux-${ARCH}" -o /usr/local/bin/hadolint && \
+    chmod +x /usr/local/bin/hadolint
+
+FROM base AS duckdb
+WORKDIR /tmp
+# renovate: datasource=github-releases depName=duckdb/duckdb
+ARG DUCKDB_VERSION=1.5.5
+RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_cli-linux-${ARCH}-musl.zip" -o duckdb.zip && \
+    unzip duckdb.zip duckdb && \
+    mv duckdb /usr/local/bin/ && \
+    rm duckdb.zip
+
+FROM base AS gitleaks
+# renovate: datasource=github-releases depName=gitleaks/gitleaks
+ARG GITLEAKS_VERSION=8.30.1
+RUN ARCH=$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/') && \
+    curl -L "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${ARCH}.tar.gz" | tar -zx -C /usr/local/bin gitleaks
+
 FROM base AS runtime
 
 USER root
@@ -178,6 +223,8 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_BROWSERS_PATH=/usr/local/ms-playwright
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# The chromium launcher appends this to its flags; the sandbox cannot run inside a container
+ENV CHROMIUM_USER_FLAGS=--no-sandbox
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
 ENV PATH="/usr/local/share/npm-global/bin:${PATH}"
 ENV NODE_PATH=/usr/local/share/npm-global/lib/node_modules
@@ -187,7 +234,7 @@ RUN mkdir -p /usr/local/share/npm-global /usr/local/ms-playwright && \
 
 USER node
 
-RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript @mermaid-js/mermaid-cli
 
 RUN npx playwright install ffmpeg
 
@@ -208,6 +255,9 @@ COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/
 COPY --from=helm /usr/local/bin/helm /usr/local/bin/
 COPY --from=hugo /usr/local/bin/hugo /usr/local/bin/
 COPY --from=gh /usr/local/bin/gh /usr/local/bin/
+COPY --from=hadolint /usr/local/bin/hadolint /usr/local/bin/
+COPY --from=duckdb /usr/local/bin/duckdb /usr/local/bin/
+COPY --from=gitleaks /usr/local/bin/gitleaks /usr/local/bin/
 COPY --from=gcloud /opt/google-cloud-sdk /opt/google-cloud-sdk
 
 RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
