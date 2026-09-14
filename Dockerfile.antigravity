@@ -1,4 +1,4 @@
-FROM node:24-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS base
+FROM node:24-slim@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553 AS base
 
 USER root
 
@@ -165,7 +165,7 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
 
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-COPY --from=ghcr.io/astral-sh/uv:0.12.10 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.13 /uv /uvx /bin/
 
 USER node
 
