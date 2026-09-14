@@ -93,7 +93,7 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
 FROM base AS gcloud
 WORKDIR /tmp
 # renovate: datasource=custom.gcloud-sdk depName=google-cloud-cli
-ARG GCLOUD_VERSION=583.0.0
+ARG GCLOUD_VERSION=584.0.0
 RUN ARCH=$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm/') && \
     curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${GCLOUD_VERSION}-linux-${ARCH}.tar.gz" && \
     tar -xf "google-cloud-cli-${GCLOUD_VERSION}-linux-${ARCH}.tar.gz" && \
