@@ -249,6 +249,9 @@ RUN mkdir -p /home/node/.tools && \
     mkdir -p /home/node/.config/gcloud && \
     chown -R node:node /home/node/.config
 
+# Docker Desktop on macOS intermittently reports bind-mount roots as uid 0 (docker/desktop-feedback#628); drop once fixed upstream
+RUN git config --system --add safe.directory '/home/node/dev/*'
+
 COPY --from=terraform /usr/local/bin/terraform /usr/local/bin/
 COPY --from=terragrunt /usr/local/bin/terragrunt /usr/local/bin/
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/
