@@ -21,7 +21,7 @@
       "automergeStrategy": "rebase"
     },
     {
-      "matchDatasources": ["github-releases", "custom.gcloud-sdk", "golang-version"],
+      "matchDatasources": ["github-releases", "custom.gcloud-sdk"],
       "groupName": "toolchain",
       "schedule": ["before 4am on monday"],
       "automerge": true,

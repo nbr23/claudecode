@@ -31,6 +31,7 @@ RUN apk add --no-cache \
     python3-dev \
     py3-pip \
     py3-virtualenv \
+    go \
     rust \
     cargo \
     sqlite \
@@ -193,13 +194,6 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     mv duckdb /usr/local/bin/ && \
     rm duckdb.zip
 
-FROM base AS go
-# renovate: datasource=golang-version depName=go
-ARG GO_VERSION=1.27.1
-RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
-    curl -L "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -zx -C /usr/local && \
-    /usr/local/go/bin/go version
-
 FROM base AS gitleaks
 # renovate: datasource=github-releases depName=gitleaks/gitleaks
 ARG GITLEAKS_VERSION=8.30.1
@@ -268,7 +262,6 @@ COPY --from=hadolint /usr/local/bin/hadolint /usr/local/bin/
 COPY --from=duckdb /usr/local/bin/duckdb /usr/local/bin/
 COPY --from=gitleaks /usr/local/bin/gitleaks /usr/local/bin/
 COPY --from=gcloud /opt/google-cloud-sdk /opt/google-cloud-sdk
-COPY --from=go /usr/local/go /usr/local/go
 
 RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
     ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
@@ -276,7 +269,6 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
     ln -s /opt/google-cloud-sdk/bin/gke-gcloud-auth-plugin /usr/local/bin/gke-gcloud-auth-plugin
 
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
-ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.17 /uv /uvx /bin/
 
