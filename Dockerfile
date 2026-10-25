@@ -47,6 +47,7 @@ RUN apk add --no-cache \
     yq \
     pngquant \
     imagemagick \
+    exiftool \
     ffmpeg \
     sox \
     rubberband \
