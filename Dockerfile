@@ -235,7 +235,8 @@ RUN mkdir -p /usr/local/share/npm-global /usr/local/ms-playwright && \
 
 USER node
 
-RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript @mermaid-js/mermaid-cli
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript @mermaid-js/mermaid-cli mongosh && \
+    mongosh --version
 
 RUN npx playwright install ffmpeg
 

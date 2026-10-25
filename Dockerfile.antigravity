@@ -144,7 +144,8 @@ RUN mkdir -p /usr/local/ms-playwright /home/node/.tools /home/node/.config/gclou
 
 USER node
 
-RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript mongosh && \
+    mongosh --version
 
 RUN npx playwright install ffmpeg
 
