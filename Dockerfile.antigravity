@@ -8,7 +8,7 @@ RUN apt update && apt install -y --no-install-recommends \
     sqlite3 postgresql-client default-mysql-client redis-tools \
     awscli \
     make g++ gcc cmake clang ninja-build build-essential \
-    fzf zsh wget gnupg \
+    fzf zsh wget gnupg vim \
     iptables ipset iproute2 \
     coreutils tzdata \
     pngquant imagemagick libimage-exiftool-perl ffmpeg sox rubberband-cli graphviz poppler-utils \
