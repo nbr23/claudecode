@@ -88,6 +88,7 @@ RUN apk add --no-cache \
     lsof \
     psmisc \
     tmux \
+    ncurses-terminfo-base \
     shellcheck \
     shfmt \
     actionlint \
