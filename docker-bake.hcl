@@ -20,7 +20,7 @@ group "default" {
 }
 
 group "claudecode" {
-  targets = ["claude", "opencode", "codex"]
+  targets = ["claude", "opencode", "codex", "harness"]
 }
 
 target "_tool" {
@@ -64,8 +64,27 @@ target "codex" {
 target "antigravity" {
   context    = "."
   dockerfile = "Dockerfile.antigravity"
+  target     = "antigravity"
   platforms  = ["linux/amd64", "linux/arm64"]
   tags       = ["${ANTIGRAVITY_IMAGE}:latest"]
   cache-from = ["type=registry,ref=${ANTIGRAVITY_IMAGE}:buildcache${CACHE_SUFFIX}"]
   cache-to   = ["type=registry,ref=${ANTIGRAVITY_IMAGE}:buildcache${CACHE_SUFFIX},mode=max"]
+}
+
+target "harness" {
+  inherits   = ["_tool"]
+  dockerfile = "Dockerfile.antigravity"
+  target     = "harness"
+  args = {
+    CLAUDE_VERSION               = CLAUDE_VERSION
+    CODEX_VERSION                = CODEX_VERSION
+    OPENCODE_VERSION             = OPENCODE_VERSION
+    OPENCODE_GEMINI_AUTH_VERSION = OPENCODE_GEMINI_AUTH_VERSION
+  }
+  tags = ["${IMAGE}:all"]
+  cache-from = [
+    "type=registry,ref=${IMAGE}:buildcache-harness${CACHE_SUFFIX}",
+    "type=registry,ref=${ANTIGRAVITY_IMAGE}:buildcache${CACHE_SUFFIX}",
+  ]
+  cache-to = ["type=registry,ref=${IMAGE}:buildcache-harness${CACHE_SUFFIX},mode=max"]
 }

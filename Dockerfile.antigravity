@@ -8,7 +8,7 @@ RUN apt update && apt install -y --no-install-recommends \
     sqlite3 postgresql-client default-mysql-client redis-tools \
     awscli \
     make g++ gcc cmake clang ninja-build build-essential \
-    fzf zsh wget gnupg vim tmux ncurses-term \
+    fzf zsh wget gnupg vim ncurses-term \
     iptables ipset iproute2 \
     coreutils tzdata \
     pngquant imagemagick libimage-exiftool-perl ffmpeg sox rubberband-cli graphviz poppler-utils \
@@ -119,7 +119,7 @@ RUN ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && \
     mv hugo /usr/local/bin/ && \
     rm hugo.tar.gz
 
-FROM base
+FROM base AS antigravity
 
 USER root
 
@@ -194,3 +194,43 @@ RUN set -eu; \
 ENV PATH="/home/node/.local/bin:${PATH}"
 
 CMD ["agy"]
+
+FROM antigravity AS harness
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+USER root
+RUN apt update && apt install -y --no-install-recommends bubblewrap \
+    && apt clean && rm -rf /var/lib/apt/lists/* \
+    && git config --system --add safe.directory '/home/node/dev/*'
+
+USER node
+
+ARG CLAUDE_VERSION
+ARG CODEX_VERSION
+ARG OPENCODE_VERSION
+ARG OPENCODE_GEMINI_AUTH_VERSION
+
+RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_VERSION}"
+
+WORKDIR /home/node/.tools
+RUN npm install "@openai/codex@${CODEX_VERSION}"
+
+RUN curl -fsSL https://opencode.ai/install | bash -s -- \
+      --version "${OPENCODE_VERSION}" --no-modify-path && \
+    mkdir -p /home/node/.local && \
+    mv /home/node/.opencode /home/node/.local/opencode
+
+ENV PATH="/home/node/.tools/node_modules/.bin:/home/node/.local/opencode/bin:${PATH}"
+ENV CLAUDE_CODE_ENABLE_TELEMETRY=0
+ENV USE_BUILTIN_RIPGREP=0
+ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
+ENV CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+
+WORKDIR /home/node
+RUN opencode plugin --global "opencode-gemini-auth@${OPENCODE_GEMINI_AUTH_VERSION}" && \
+    claude --version && codex --version && opencode --version && agy --version
+
+CMD ["sleep", "infinity"]
+
+FROM antigravity AS default

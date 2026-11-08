@@ -87,7 +87,6 @@ RUN apk add --no-cache \
     socat \
     lsof \
     psmisc \
-    tmux \
     ncurses-terminfo-base \
     shellcheck \
     shfmt \
