@@ -264,7 +264,9 @@ RUN mkdir -p /usr/local/share/npm-global /usr/local/ms-playwright && \
 
 USER node
 
-RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript @mermaid-js/mermaid-cli mongosh && \
+# renovate: datasource=npm depName=mongosh
+ARG MONGOSH_VERSION=2.14.1
+RUN npm install -g pnpm @playwright/mcp chrome-devtools-mcp playwright puppeteer sharp sharp-cli tsx typescript @mermaid-js/mermaid-cli "mongosh@${MONGOSH_VERSION}" && \
     mongosh --version
 
 RUN npx playwright install ffmpeg
