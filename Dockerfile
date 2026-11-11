@@ -91,6 +91,9 @@ RUN apk add --no-cache \
     shellcheck \
     shfmt \
     actionlint \
+    android-tools \
+    file \
+    binutils \
     fd \
     tree \
     just
@@ -107,6 +110,25 @@ RUN apk add --no-cache \
 #     flutter config --no-analytics
 
 USER root
+
+FROM eclipse-temurin:25-jdk-alpine-3.22@sha256:6e350fe75510c71e35e78e8b8d08385f98b0518eed6a7ad29b42123fa6db4dc5 AS java
+
+FROM base AS reversing-tools
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+COPY --from=java /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+# renovate: datasource=github-releases depName=iBotPeaches/Apktool
+ARG APKTOOL_VERSION=3.0.3
+# renovate: datasource=github-releases depName=skylot/jadx
+ARG JADX_VERSION=1.5.6
+# renovate: datasource=github-releases depName=google/bundletool
+ARG BUNDLETOOL_VERSION=1.18.3
+# renovate: datasource=github-releases depName=NationalSecurityAgency/ghidra
+ARG GHIDRA_VERSION=Ghidra_12.2_build
+RUN apk add --no-cache zlib-dev
+COPY install-tools.sh /tmp/install-tools.sh
+RUN bash /tmp/install-tools.sh
 
 FROM base AS terraform
 WORKDIR /tmp
@@ -204,6 +226,12 @@ RUN ARCH=$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/') && \
 FROM base AS runtime
 
 USER root
+
+COPY --from=java /opt/java/openjdk /opt/java/openjdk
+COPY --from=reversing-tools /opt/reversing /opt/reversing
+ENV JAVA_HOME=/opt/java/openjdk
+ENV GHIDRA_INSTALL_DIR=/opt/reversing/ghidra
+ENV PATH="${JAVA_HOME}/bin:/opt/reversing/bin:/opt/reversing/jadx/bin:/opt/reversing/ghidra/support:${PATH}"
 
 ARG TZ=America/New_York
 ENV TZ=${TZ}
