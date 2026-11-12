@@ -84,7 +84,7 @@ Images are defined in `docker-bake.hcl`. The version variables have no defaults 
 
 ```sh
 export CLAUDE_VERSION="$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
-export OPENCODE_VERSION="$(jq -r '.devDependencies["opencode-ai"]' package.json)"
+export OPENCODE_VERSION="$(jq -r '.devDependencies["@opencode/cli"]' package.json)"
 export OPENCODE_GEMINI_AUTH_VERSION="$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
 export CODEX_VERSION="$(jq -r '.dependencies["@openai/codex"]' package.json)"
 

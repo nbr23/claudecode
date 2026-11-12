@@ -43,7 +43,7 @@ jobs:
         run: |
           {
             echo "CLAUDE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
-            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["opencode-ai"]' package.json)"
+            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["@opencode/cli"]' package.json)"
             echo "OPENCODE_GEMINI_AUTH_VERSION=$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
             echo "CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)"
           } >> "$GITHUB_ENV"
@@ -106,7 +106,7 @@ jobs:
         run: |
           {
             echo "CLAUDE_VERSION=$(jq -r '.devDependencies["@anthropic-ai/claude-code"]' package.json)"
-            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["opencode-ai"]' package.json)"
+            echo "OPENCODE_VERSION=$(jq -r '.devDependencies["@opencode/cli"]' package.json)"
             echo "OPENCODE_GEMINI_AUTH_VERSION=$(jq -r '.devDependencies["opencode-gemini-auth"]' package.json)"
             echo "CODEX_VERSION=$(jq -r '.dependencies["@openai/codex"]' package.json)"
           } >> "$GITHUB_ENV"

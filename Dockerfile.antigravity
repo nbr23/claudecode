@@ -245,7 +245,7 @@ RUN curl -fsSL https://claude.ai/install.sh | bash -s "${CLAUDE_VERSION}"
 WORKDIR /home/node/.tools
 RUN npm install "@openai/codex@${CODEX_VERSION}"
 
-RUN curl -fsSL https://opencode.ai/install | bash -s -- \
+RUN curl -fsSL https://opencode.ai/v2/install | bash -s -- \
       --version "${OPENCODE_VERSION}" --no-modify-path && \
     mkdir -p /home/node/.local && \
     mv /home/node/.opencode /home/node/.local/opencode
@@ -257,7 +257,7 @@ ENV CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1
 ENV CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 
 WORKDIR /home/node
-RUN opencode plugin --global "opencode-gemini-auth@${OPENCODE_GEMINI_AUTH_VERSION}" && \
+RUN opencode plugin add "opencode-gemini-auth@${OPENCODE_GEMINI_AUTH_VERSION}" && \
     claude --version && codex --version && opencode --version && agy --version
 
 CMD ["sleep", "infinity"]

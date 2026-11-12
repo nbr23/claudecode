@@ -319,13 +319,14 @@ FROM runtime AS opencode
 
 ARG OPENCODE_VERSION
 ARG OPENCODE_GEMINI_AUTH_VERSION
-RUN curl -fsSL https://opencode.ai/install | bash -s -- \
-      --version ${OPENCODE_VERSION} \
+RUN curl -fsSL https://opencode.ai/v2/install | bash -s -- \
+      --version "${OPENCODE_VERSION}" \
       --no-modify-path && \
     mkdir -p /home/node/.local && \
     mv /home/node/.opencode /home/node/.local/opencode
 ENV PATH="/home/node/.local/bin:/home/node/.local/opencode/bin:${PATH}"
-RUN opencode plugin --global opencode-gemini-auth@${OPENCODE_GEMINI_AUTH_VERSION}
+RUN opencode plugin add "opencode-gemini-auth@${OPENCODE_GEMINI_AUTH_VERSION}" && \
+    opencode --version
 WORKDIR /home/node
 ENTRYPOINT ["opencode"]
 

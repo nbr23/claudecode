@@ -8,7 +8,7 @@
       "versioning": "regex:^Ghidra_(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?_build$"
     },
     {
-      "matchPackageNames": ["@openai/codex", "@anthropic-ai/claude-code", "opencode-ai", "opencode-gemini-auth", "antigravity-cli"],
+      "matchPackageNames": ["@openai/codex", "@anthropic-ai/claude-code", "@opencode/cli", "opencode-gemini-auth", "antigravity-cli"],
       "schedule": ["at any time"],
       "automerge": true,
       "automergeType": "pr",
