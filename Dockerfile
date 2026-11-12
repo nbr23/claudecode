@@ -1,4 +1,4 @@
-FROM node:24-alpine3.22@sha256:191c9f0080fcbbc6547a85dc0ff7988072214a355aabdc1d2ec55a7dae5eea8a AS base
+FROM node:26-alpine3.24@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS base
 
 USER root
 
@@ -111,7 +111,7 @@ RUN apk add --no-cache \
 
 USER root
 
-FROM eclipse-temurin:25-jdk-alpine-3.22@sha256:6e350fe75510c71e35e78e8b8d08385f98b0518eed6a7ad29b42123fa6db4dc5 AS java
+FROM eclipse-temurin:25-jdk-alpine-3.24@sha256:c7c3d0bdf7f2bbc5a05a6712ed334d198360105634ea9adf76fca94f381b1e3f AS java
 
 FROM base AS reversing-tools
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
