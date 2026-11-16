@@ -55,7 +55,7 @@ ENV PATH=$PATH:/usr/local/share/npm-global/bin
 
 # USER root
 
-FROM eclipse-temurin:25-jdk-jammy@sha256:e4f029273ed9e4444697df30bb6098dbe51477291598aebc54dd0b48d95d6ae7 AS java
+FROM eclipse-temurin:25-jdk-jammy@sha256:5ba254809ef542504d40d47271c7d6c4f240fe40ca1386259806d431f13b6b4f AS java
 
 FROM base AS reversing-tools
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -196,7 +196,7 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
 
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.8 /uv /uvx /bin/
 
 USER node
 
