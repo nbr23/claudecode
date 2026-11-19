@@ -7,7 +7,7 @@
     "@openai/codex": "0.170.0"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-code": "2.1.327",
+    "@anthropic-ai/claude-code": "2.1.328",
     "@opencode/cli": "2.3.2",
     "opencode-gemini-auth": "2.0.1"
   }
