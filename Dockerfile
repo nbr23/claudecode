@@ -111,7 +111,7 @@ RUN apk add --no-cache \
 
 USER root
 
-FROM eclipse-temurin:25-jdk-alpine-3.24@sha256:c7c3d0bdf7f2bbc5a05a6712ed334d198360105634ea9adf76fca94f381b1e3f AS java
+FROM eclipse-temurin:25-jdk-alpine-3.24@sha256:22edbb1021420ae6e248519d1af07577742314d67d4c60fcbb2e285b7e47fa78 AS java
 
 FROM base AS reversing-tools
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
@@ -303,7 +303,7 @@ RUN ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
 
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.8 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.9 /uv /uvx /bin/
 
 USER node
 
