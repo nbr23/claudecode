@@ -67,6 +67,29 @@ docker run --rm -ti \
   nbr23/antigravity
 ```
 
+### Garmin Connect IQ
+
+Every image ships the Connect IQ SDK in `/opt/connectiq-sdk` with `monkeyc` on `PATH`. The simulator is not usable in the container.
+
+Device definitions need a Garmin login, so download them on the host with Garmin's SDK manager and mount them read-only. The files are the same on every OS; only the host path differs (`~/.Garmin/ConnectIQ` on Linux, `~/Library/Application Support/Garmin/ConnectIQ` on macOS):
+
+```sh
+ciq=~/.Garmin/ConnectIQ
+docker run --rm -ti \
+  -v "$(pwd):/home/node/dev/${PWD##*/}" -w "/home/node/dev/${PWD##*/}" \
+  -v "$ciq/Devices:/home/node/.Garmin/ConnectIQ/Devices:ro" \
+  -v "$ciq/Fonts:/home/node/.Garmin/ConnectIQ/Fonts:ro" \
+  nbr23/claudecode
+```
+
+Inside the container, generate a developer key once and build:
+
+```sh
+openssl genrsa -out developer_key.pem 4096
+openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt
+monkeyc -d <device-id> -f monkey.jungle -o bin/app.prg -y developer_key.der
+```
+
 ### All-in-one
 
 `nbr23/claudecode:all` stays idle by default; start it detached and exec into it:

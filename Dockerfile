@@ -223,15 +223,25 @@ ARG GITLEAKS_VERSION=8.30.1
 RUN ARCH=$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/') && \
     curl -L "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${ARCH}.tar.gz" | tar -zx -C /usr/local/bin gitleaks
 
+FROM base AS connectiq
+WORKDIR /tmp
+# renovate: datasource=custom.connectiq-sdk depName=connectiq-sdk
+ARG CONNECTIQ_SDK_VERSION=9.3.0-2026-10-20-95888f262
+RUN curl -fsSL --retry 3 "https://developer.garmin.com/downloads/connect-iq/sdks/connectiq-sdk-lin-${CONNECTIQ_SDK_VERSION}.zip" -o sdk.zip && \
+    unzip -q sdk.zip -d /opt/connectiq-sdk && \
+    rm sdk.zip
+
 FROM base AS runtime
 
 USER root
 
 COPY --from=java /opt/java/openjdk /opt/java/openjdk
 COPY --from=reversing-tools /opt/reversing /opt/reversing
+COPY --from=connectiq /opt/connectiq-sdk /opt/connectiq-sdk
 ENV JAVA_HOME=/opt/java/openjdk
 ENV GHIDRA_INSTALL_DIR=/opt/reversing/ghidra
-ENV PATH="${JAVA_HOME}/bin:/opt/reversing/bin:/opt/reversing/jadx/bin:/opt/reversing/ghidra/support:${PATH}"
+ENV PATH="${JAVA_HOME}/bin:/opt/connectiq-sdk/bin:/opt/reversing/bin:/opt/reversing/jadx/bin:/opt/reversing/ghidra/support:${PATH}"
+RUN monkeyc --version
 
 ARG TZ=America/New_York
 ENV TZ=${TZ}
